@@ -26,6 +26,7 @@ type Client struct {
 
 	// Services used for communicating with different parts of the Twilio API
 	Messages *MessageService
+	Calls    *CallService
 }
 
 // NewClient returns a new Twilio API client. This will load default http.Client if httpClient is nil.
@@ -45,6 +46,7 @@ func NewClient(accountSid, authToken string, httpClient *http.Client) *Client {
 	}
 
 	c.Messages = &MessageService{client: c}
+	c.Calls = &CallService{client: c}
 
 	return c
 }

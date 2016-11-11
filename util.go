@@ -49,7 +49,9 @@ func structToMapString(i interface{}) map[string][]string {
 	for i := 0; i < iv.NumField(); i++ {
 		k := tp.Field(i).Name
 		f := iv.Field(i)
-		ms[k] = valueToString(f)
+		if !isZero(f) {
+			ms[k] = valueToString(f)
+		}
 	}
 
 	return ms
@@ -81,4 +83,32 @@ func valueToString(f reflect.Value) []string {
 	}
 
 	return v
+}
+
+func isZero(v reflect.Value) bool {
+	switch v.Kind() {
+	case reflect.Func, reflect.Map, reflect.Slice:
+		return v.IsNil()
+	case reflect.Array:
+		z := true
+		for i := 0; i < v.Len(); i++ {
+			z = z && isZero(v.Index(i))
+		}
+		return z
+	case reflect.Struct:
+		z := true
+		for i := 0; i < v.NumField(); i++ {
+			if v.Field(i).CanSet() {
+				z = z && isZero(v.Field(i))
+			}
+		}
+		return z
+	case reflect.Ptr:
+		return isZero(reflect.Indirect(v))
+	}
+	// Compare other types directly:
+	z := reflect.Zero(v.Type())
+	result := v.Interface() == z.Interface()
+
+	return result
 }
